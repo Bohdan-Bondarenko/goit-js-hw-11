@@ -3,85 +3,130 @@ import 'izitoast/dist/css/iziToast.min.css';
 import SimpleLightbox from 'simplelightbox';
 import 'simplelightbox/dist/simple-lightbox.min.css';
 
-const form = document.querySelector('.form');
-const gallery = document.querySelector('.gallery');
+const BASE_URL = 'https://pixabay.com/api/';
+const API_KEY = '42411294-725222da594329eba51636ded';
+
+const searchForm = document.querySelector('.search-form');
+const searchInput = document.querySelector('.search-input');
+const galleryList = document.querySelector('.gallery');
 const loader = document.querySelector('.loader');
 
-loader.style.display = 'none';
-const searchParams = {
-    key: '42411294-725222da594329eba51636ded',
-    image_type: 'photo',
-    orientation: 'horizontal',
-    safesearch: true,
-    q: '',
-}
-
-form.addEventListener('submit', e => {
-    e.preventDefault();
-    loader.style.display = 'block';
-    const inputValue = e.target.elements.input.value;
-    searchParams.q = inputValue;
-    getPhotoByName()
-        .then(images => createGallery(images))
-        .catch(error => console.log(error))
-    e.target.reset();
+const lightbox = new SimpleLightbox('.gallery a', {
+  captionsData: 'alt',
+  captionPosition: 'bottom',
+  captionDelay: 250,
 });
 
-function getPhotoByName() {
-    const urlParams = new URLSearchParams(searchParams);
-    return fetch(`https://pixabay.com/api/?${urlParams}`)
-        .then(res => {
-        if (res.ok) {
-            return res.json();
-        } else {
-            throw new Error(res.status);
-        }
+searchForm.addEventListener('submit', function (event) {
+  event.preventDefault();
+
+  const query = encodeURIComponent(searchInput.value.trim());
+
+  if (query.trim() === '') {
+    iziToast.error({
+      title: 'Error',
+      message: 'Please enter a search query.',
+    });
+    return;
+  }
+
+  showLoader();
+
+  const apiUrl = new URL(BASE_URL);
+  apiUrl.searchParams.set('key', API_KEY);
+  apiUrl.searchParams.set('q', query);
+  apiUrl.searchParams.set('image_type', 'photo');
+  apiUrl.searchParams.set('orientation', 'horizontal');
+  apiUrl.searchParams.set('safesearch', true);
+
+  fetch(apiUrl)
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      return response.json();
     })
+    .then(data => {
+      displayImages(data.hits);
+    })
+    .catch(error => {
+      console.error(error);
+    })
+    .finally(() => {
+      hideLoader();
+    });
+});
+function displayImages(images) {
+  galleryList.innerHTML = '';
+
+  if (images.length === 0) {
+    iziToast.info({
+      title: 'Info',
+      message:
+        'Sorry, there are no images matching your search query. Please try again.',
+    });
+    return;
+  }
+
+  const markup = createMarkup(images);
+  galleryList.innerHTML = markup;
+
+  lightbox.refresh();
+  hideLoader();
 }
 
-function createGallery(images) {
-    if (images.hits.length === 0) {
-       iziToast.show({
-            message: 'Sorry, there are no images matching your search query. Please try again!',
-            messageColor: '#FFFFFF',
-            backgroundColor: '#EF4040',
-            position: 'topRight',
-            messageSize: '16px',
-            messageLineHeight: '24px',
-            maxWidth: '432px',
-       });
-        gallery.innerHTML = '';
-    } else {
-        const link = images.hits.map(image => `<a class="gallery-link" href="${image.largeImageURL}">
-        <img class="gallery-image"
-        src="${image.webformatURL}"
-        alt="${image.tags}"
-         </a>
-        <div class="img-content">
-        <div>
-        <h3>Likes</h3>
-        <p>${image.likes}</p>
+function createMarkup(images) {
+  return images
+    .map(
+      ({
+        webformatURL,
+        largeImageURL,
+        tags,
+        likes,
+        views,
+        comments,
+        downloads,
+      }) =>
+        `<li class="gallery-item">
+      <a class="gallery-link" href="${largeImageURL}">
+        <img
+          class="gallery-image"
+          src="${webformatURL}"
+          alt="${tags}"
+          width="360"
+        />
+      </a>
+      <div class="thumb-block">
+        <div class="block">
+          <h2 class="title">Likes</h2>
+          <p class="amount">${likes}</p>
         </div>
+        <div class="block">
+          <h2 class="title">Views</h2>
+          <p class="amount">${views}</p>
+        </div>
+        <div class="block">
+          <h2 class="title">Comments</h2>
+          <p class="amount">${comments}</p>
+        </div>
+        <div class="block">
+          <h2 class="title">Downloads</h2>
+          <p class="amount">${downloads}</p>
+        </div>
+      </div>
+    </li>`
+    )
+    .join('');
+}
 
-        <div>
-        <h3>Views</h3>
-        <p>${image.views}</p>
-        </div>
+function showLoader() {
+  if (loader) {
+    loader.style.display = 'block';
+  }
+}
 
-        <div>
-        <h3>Comments</h3>
-        <p>${image.comments}</p>
-        </div>
-
-        <div>
-        <h3>Downloads</h3>
-        <p>${image.downloads}</p>
-        </div>
-        </div>
-        `).join('');
-        gallery.innerHTML = link;
-    }
-    let lightBox = new SimpleLightbox('.gallery-link');
-    lightBox.refresh();
+function hideLoader() {
+  if (loader) {
     loader.style.display = 'none';
+  }
 }
