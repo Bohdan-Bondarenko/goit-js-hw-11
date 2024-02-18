@@ -2,32 +2,29 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vanilla-app-template/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    
-    
+    <title>Homework 11</title>
     <link
-      href="https://fonts.googleapis.com/css2?family=Montserrat&family=Raleway:wght@700&display=swap"
       rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/modern-normalize@2.0.0/modern-normalize.min.css"
     />
-    <title>Gallery</title>
+    
     <script type="module" crossorigin src="/vanilla-app-template/commonHelpers.js"></script>
     <link rel="modulepreload" crossorigin href="/vanilla-app-template/assets/vendor-5b791d57.js">
     <link rel="stylesheet" href="/vanilla-app-template/assets/vendor-cf6910df.css">
-    <link rel="stylesheet" href="/vanilla-app-template/assets/index-a80668af.css">
+    <link rel="stylesheet" href="/vanilla-app-template/assets/index-b37c4405.css">
   </head>
   <body>
-    <form class="form">
-      <input
-        type="text"
-        class="form-input"
-        name="input"
-        placeholder="Search images..."
-        required
-      />
-      <button type="submit" class="form-btn">Search</button>
+    <form class="search-form">
+      <input class="search-input" name="search" type="text" />
+      <button class="btn" type="submit">Search</button>
     </form>
-    <span class="loader"></span>
-    <div class="gallery"></div>
+    <div class="container">
+      <span class="loader"></span>
+      <ul class="gallery"></ul>
+    </div>
+
     
   </body>
 </html>
